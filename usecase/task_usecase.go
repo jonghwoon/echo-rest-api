@@ -11,6 +11,7 @@ type ITaskUsecase interface {
 	GetTaskById(userId uint, taskId uint) (model.TaskResponse, error)
 	CreateTask(task model.Task) (model.TaskResponse, error)
 	UpdateTask(task model.Task, userId uint, taskId uint) (model.TaskResponse, error)
+	UpdateTaskStatus(completed bool, userId uint, taskId uint) (model.TaskResponse, error)
 	DeleteTask(userId uint, taskId uint) error
 }
 
@@ -83,6 +84,26 @@ func (tu *taskUsecase) UpdateTask(task model.Task, userId uint, taskId uint) (mo
 		Title:     task.Title,
 		CreatedAt: task.CreatedAt,
 		UpdatedAt: task.UpdatedAt,
+	}
+	return resTask, nil
+}
+
+func (tu *taskUsecase) UpdateTaskStatus(completed bool, userId uint, taskId uint) (model.TaskResponse, error) {
+	if err := tu.tr.UpdateTaskStatus(completed, userId, taskId); err != nil {
+		return model.TaskResponse{}, err
+	}
+
+	task := model.Task{}
+	if err := tu.tr.GetTaskById(&task, userId, taskId); err != nil {
+		return model.TaskResponse{}, err
+	}
+
+	resTask := model.TaskResponse{
+		ID:        task.ID,
+		Title:     task.Title,
+		CreatedAt: task.CreatedAt,
+		UpdatedAt: task.UpdatedAt,
+		Completed: task.Completed,
 	}
 	return resTask, nil
 }

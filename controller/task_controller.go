@@ -15,6 +15,7 @@ type ITaskController interface {
 	GetTaskById(c echo.Context) error
 	CreateTask(c echo.Context) error
 	UpdateTask(c echo.Context) error
+	UpdateTaskStatus(c echo.Context) error
 	DeleteTask(c echo.Context) error
 }
 
@@ -73,13 +74,40 @@ func (tc *taskController) UpdateTask(c echo.Context) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userId := claims["user_id"]
 	id := c.Param("taskId")
-	taskId, _ := strconv.Atoi(id)
+
+	taskId, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid task ID")
+	}
 
 	task := model.Task{}
 	if err := c.Bind(&task); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 	taskRes, err := tc.tu.UpdateTask(task, uint(userId.(float64)), uint(taskId))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, taskRes)
+}
+
+func (tc *taskController) UpdateTaskStatus(c echo.Context) error {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["user_id"]
+	id := c.Param("taskId")
+
+	taskId, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid task ID")
+	}
+
+	task := model.Task{}
+	if err := c.Bind(&task); err != nil {
+		return c.JSON(http.StatusBadRequest, err.Error())
+	}
+
+	taskRes, err := tc.tu.UpdateTaskStatus(task.Completed, uint(userId.(float64)), uint(taskId))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
