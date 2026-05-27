@@ -48,6 +48,11 @@ jobs:
             echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
             echo "POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}" >> .env
             echo "POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}" >> .env
+            echo "SECRET=${{ secrets.SECRET }}" >> .env
+            echo "FE_URL=${{ secrets.FE_URL }}" >> .env
+            echo "API_DOMAIN=${{ secrets.API_DOMAIN }}" >> .env
+            echo "GO_ENV=${{ secrets.GO_ENV }}" >> .env
+            echo "PORT=${{ secrets.PORT }}" >> .env
 
             # 컨테이너 배포 진행
             docker compose pull backend
