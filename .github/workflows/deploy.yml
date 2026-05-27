@@ -1,4 +1,4 @@
-name: Deploy React Frontend
+name: Deploy Go Backend
 
 on:
   push:
@@ -35,13 +35,26 @@ jobs:
 
       - name: Deploy to Lightsail Server
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USERNAME }}
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd ~/deploy
-            # 프론트엔드 이미지만 새로 다운로드하고 재실행
-            docker compose pull frontend
-            docker compose up -d frontend
-            docker image prune -ff
+            # 서버에 .env 파일을 동적으로 생성 (매 배포마다 최신값으로 덮어쓰기)
+            echo "POSTGRES_USER=$POSTGRES_USER" > .env
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+            echo "POSTGRES_DB=$POSTGRES_DB" >> .env
+            echo "POSTGRES_HOST=$POSTGRES_HOST" >> .env
+            echo "POSTGRES_PORT=$POSTGRES_PORT" >> .env
+            # 백엔드 이미지만 새로 다운로드하고 재실행
+            docker compose pull backend
+            docker compose up -d backend
+            # 쌓여있는 안 쓰는 옛날 이미지 삭제 (디스크 용량 확보)
+            docker image prune -f
